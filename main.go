@@ -5,7 +5,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 )
@@ -18,18 +17,22 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter file name: ")
 	text, _ := reader.ReadString('\n')
-	text = strings.Trim(text, "\n ")
+	text = strings.Trim(text, "\r\n ")
 
 	f, err := os.Open(text)
 	if err != nil {
-		log.Fatalf("Failed to open file: %v\n%v", text, err)
+		fmt.Printf("Failed to open file: %v\n%v", text, err)
+		reader.ReadString('\n')
+		os.Exit(1)
 	}
 	r := csv.NewReader(bufio.NewReader(f))
 
 	outname := "fixed_" + text
 	outfile, err := os.Create(outname)
 	if err != nil {
-		log.Fatalf("Failed to create output file: %v\n%v", outname, err)
+		fmt.Printf("Failed to create output file: %v\n%v", outname, err)
+		reader.ReadString('\n')
+		os.Exit(1)
 	}
 	w := csv.NewWriter(bufio.NewWriter(outfile))
 	w.Write([]string{
@@ -79,31 +82,32 @@ func main() {
 			}
 
 			newrow := []string{
-				strings.ToLower(record[0]),  // source
-				record[1],                   // host
-				record[2],                   // link
-				record[3],                   // time (ET)
-				"",                          // time (GMT)
-				record[4],                   // auth
-				record[5],                   // age
-				strings.ToLower(record[6]),  // gender
-				strings.ToLower(record[7]),  // country
-				record[8],                   // location
-				strings.Join(tags, " "),     // tags
-				record[19],                  // star
-				record[20],                  // assigned
-				strings.ToLower(record[21]), // sentiment
-				record[22],                  // title
-				record[23],                  // snippet
-				record[24],                  // contents
-				record[25],                  // uniqueid
-				strings.ToLower(record[26]), // language
-				record[27],                  // followers
-				record[28],                  // following
+				strings.ToLower(record[0]),        // source
+				record[1],                         // host
+				record[2],                         // link
+				record[3],                         // time (ET)
+				"",                                // time (GMT)
+				record[4],                         // auth
+				record[5],                         // age
+				strings.ToLower(record[6]),        // gender
+				strings.ToLower(record[7]),        // country
+				record[8],                         // location
+				strings.Join(tags, " "),           // tags
+				record[19],                        // star
+				record[20],                        // assigned
+				strings.ToLower(record[21]),       // sentiment
+				record[22],                        // title
+				strings.Trim(record[23], "\r\n "), // snippet
+				strings.Trim(record[24], "\r\n "), // contents
+				record[25],                        // uniqueid
+				strings.ToLower(record[26]),       // language
+				record[27],                        // followers
+				record[28],                        // following
 			}
 
 			w.Write(newrow)
 		}
 	}
 	fmt.Println("Done. Your file should be called: " + outname)
+	reader.ReadString('\n')
 }
